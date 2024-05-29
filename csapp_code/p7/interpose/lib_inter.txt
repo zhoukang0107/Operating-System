@@ -1,0 +1,17 @@
+编译时打桩：
+gcc -DCOMPILETIME -c mymalloc.c
+gcc -I. -o intc int.c mymalloc.o
+
+-I. :告诉C预处理器在搜索通常的系统目录之前现在当前目录中查找malloc.h
+
+链接时打桩：
+Linux静态连接器支持用--wrap f标志进行链接时打桩。这个标志告诉链接器，把对符号f的引用解析成__wrap_f(前缀是两个下划线)，还要把对符号__real_f(前缀是两个下划线)的引用解析为f
+-Wl,option标志把option传给链接器，option中的每个逗号都要替换为一个空格，所以-Wl,wrap,malloc就把--wrap malloc 传递给链接器，以类似的方式传递-Wl,--wrap,free
+gcc -DLINKTIME -c mymalloc1.c
+gcc -c int.c
+gcc -Wl,--wrap,malloc Wl,--wrap,free -o intl int.o mymalloc.o
+
+运行时打桩：
+gcc -DRUNTIME -shared -fpic -o mymalloc2.so mymalloc.c -ldl
+gcc -o intr int.c
+LD_PRELOAD="./mymalloc2.so" ./intr
